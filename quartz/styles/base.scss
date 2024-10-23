@@ -2,6 +2,14 @@
 @use "./syntax.scss";
 @use "./callouts.scss";
 
+:root {
+  --headerFont: "LXGW WenKai";
+  --bodyFont: "LXGW WenKai";
+  --codeFont: "LXGW WenKai Mono";
+  --strong-em-color-1: #1048ff;
+  --strong-em-color-2: #14c8ff;
+}
+
 html {
   scroll-behavior: smooth;
   text-size-adjust: none;
