@@ -114,6 +114,15 @@ export function normalizeRelativeURLs(el: Element | Document, destination: strin
   el.querySelectorAll('[src^="./"], [src^="../"]').forEach((item) =>
     _rebaseHtmlElement(item, "src", destination),
   )
+  el.querySelectorAll('[http-equiv="refresh"]').forEach((item) => {
+    const content = item.getAttribute("content")!
+    const [_, url] = content.split("url=")
+    const rebased = new URL(url, destination)
+    item.setAttribute("content", `0; url=${rebased.pathname + rebased.hash}`)
+  })
+  el.querySelectorAll('[data-excalidraw]').forEach((item) => {
+    _rebaseHtmlElement(item, "data-excalidraw", destination)
+  })
 }
 
 const _rebaseHastElement = (

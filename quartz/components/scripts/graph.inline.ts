@@ -15,7 +15,7 @@ import {
 } from "d3"
 import { Text, Graphics, Application, Container, Circle } from "pixi.js"
 import { Group as TweenGroup, Tween as Tweened } from "@tweenjs/tween.js"
-import { registerEscapeHandler, removeAllChildren } from "./util"
+import { fetchData, registerEscapeHandler, removeAllChildren } from "./util.inline"
 import { FullSlug, SimpleSlug, getFullSlug, resolveRelative, simplifySlug } from "../../util/path"
 import { D3Config } from "../Graph"
 
@@ -90,7 +90,7 @@ async function renderGraph(container: string, fullSlug: FullSlug) {
   } = JSON.parse(graph.dataset["cfg"]!) as D3Config
 
   const data: Map<SimpleSlug, ContentDetails> = new Map(
-    Object.entries<ContentDetails>(await fetchData).map(([k, v]) => [
+    Object.entries<ContentDetails>(await fetchData()).map(([k, v]) => [
       simplifySlug(k as FullSlug),
       v,
     ]),
@@ -376,7 +376,7 @@ async function renderGraph(container: string, fullSlug: FullSlug) {
       eventMode: "none",
       text: n.text,
       alpha: 0,
-      anchor: { x: 0.5, y: 1.2 },
+      anchor: { x: 0.5, y: 1.8 },
       style: {
         fontSize: fontSize * 15,
         fill: computedStyleMap["--dark"],
@@ -550,24 +550,12 @@ document.addEventListener("nav", async (e: CustomEventMap["nav"]) => {
   addToVisited(simplifySlug(slug))
   await renderGraph("graph-container", slug)
 
-  // Function to re-render the graph when the theme changes
-  const handleThemeChange = () => {
-    renderGraph("graph-container", slug)
-  }
-
-  // event listener for theme change
-  document.addEventListener("themechange", handleThemeChange)
-
-  // cleanup for the event listener
-  window.addCleanup(() => {
-    document.removeEventListener("themechange", handleThemeChange)
-  })
-
   const container = document.getElementById("global-graph-outer")
   const sidebar = container?.closest(".sidebar") as HTMLElement
 
   function renderGlobalGraph() {
     const slug = getFullSlug(window)
+    document.body.appendChild(container!)
     container?.classList.add("active")
     if (sidebar) {
       sidebar.style.zIndex = "1"

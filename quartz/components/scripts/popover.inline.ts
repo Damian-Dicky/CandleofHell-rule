@@ -1,9 +1,9 @@
 import { computePosition, flip, inline, shift } from "@floating-ui/dom"
 import { normalizeRelativeURLs } from "../../util/path"
-
+import { initExcalidraw } from './util.inline';
 const p = new DOMParser()
 async function mouseEnterHandler(
-  this: HTMLAnchorElement,
+  this: HTMLLinkElement,
   { clientX, clientY }: { clientX: number; clientY: number },
 ) {
   const link = this
@@ -33,7 +33,7 @@ async function mouseEnterHandler(
   thisUrl.hash = ""
   thisUrl.search = ""
   const targetUrl = new URL(link.href)
-  const hash = decodeURIComponent(targetUrl.hash)
+  const hash = targetUrl.hash
   targetUrl.hash = ""
   targetUrl.search = ""
 
@@ -83,8 +83,11 @@ async function mouseEnterHandler(
       normalizeRelativeURLs(html, targetUrl)
       const elts = [...html.getElementsByClassName("popover-hint")]
       if (elts.length === 0) return
-
+      const excalidraw = html.querySelector("[data-excalidraw]")
       elts.forEach((elt) => popoverInner.appendChild(elt))
+      if (excalidraw) {
+        initExcalidraw()
+      }
   }
 
   setPosition(popoverElement)
@@ -100,7 +103,7 @@ async function mouseEnterHandler(
 }
 
 document.addEventListener("nav", () => {
-  const links = [...document.getElementsByClassName("internal")] as HTMLAnchorElement[]
+  const links = [...document.getElementsByClassName("internal")] as HTMLLinkElement[]
   for (const link of links) {
     link.addEventListener("mouseenter", mouseEnterHandler)
     window.addCleanup(() => link.removeEventListener("mouseenter", mouseEnterHandler))

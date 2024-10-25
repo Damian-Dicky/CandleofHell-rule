@@ -1,6 +1,6 @@
 import FlexSearch from "flexsearch"
 import { ContentDetails } from "../../plugins/emitters/contentIndex"
-import { registerEscapeHandler, removeAllChildren } from "./util"
+import { fetchData, initExcalidraw, registerEscapeHandler, removeAllChildren } from "./util.inline"
 import { FullSlug, normalizeRelativeURLs, resolveRelative } from "../../util/path"
 
 interface Item {
@@ -97,9 +97,8 @@ function highlight(searchTerm: string, text: string, trim?: boolean) {
     })
     .join(" ")
 
-  return `${startIndex === 0 ? "" : "..."}${slice}${
-    endIndex === tokenizedText.length - 1 ? "" : "..."
-  }`
+  return `${startIndex === 0 ? "" : "..."}${slice}${endIndex === tokenizedText.length - 1 ? "" : "..."
+    }`
 }
 
 function highlightHTML(searchTerm: string, el: HTMLElement) {
@@ -145,10 +144,11 @@ function highlightHTML(searchTerm: string, el: HTMLElement) {
 
 document.addEventListener("nav", async (e: CustomEventMap["nav"]) => {
   const currentSlug = e.detail.url
-  const data = await fetchData
+  const data = (await fetchData())
   const container = document.getElementById("search-container")
+  document.body.appendChild(container as Node)
   const sidebar = container?.closest(".sidebar") as HTMLElement
-  const searchButton = document.getElementById("search-button")
+  const searchIcon = document.getElementById("search-icon")
   const searchBar = document.getElementById("search-bar") as HTMLInputElement | null
   const searchLayout = document.getElementById("search-layout")
   const idDataMap = Object.keys(data) as FullSlug[]
@@ -191,8 +191,6 @@ document.addEventListener("nav", async (e: CustomEventMap["nav"]) => {
     }
 
     searchType = "basic" // reset search type after closing
-
-    searchButton?.focus()
   }
 
   function showSearch(searchTypeNew: SearchType) {
@@ -309,9 +307,8 @@ document.addEventListener("nav", async (e: CustomEventMap["nav"]) => {
     itemTile.classList.add("result-card")
     itemTile.id = slug
     itemTile.href = resolveUrl(slug).toString()
-    itemTile.innerHTML = `<h3>${title}</h3>${htmlTags}${
-      enablePreview && window.innerWidth > 600 ? "" : `<p>${content}</p>`
-    }`
+    itemTile.innerHTML = `<h3>${title}</h3>${htmlTags}${enablePreview && window.innerWidth > 600 ? "" : `<p>${content}</p>`
+      }`
     itemTile.addEventListener("click", (event) => {
       if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
       hideSearch()
@@ -342,8 +339,8 @@ document.addEventListener("nav", async (e: CustomEventMap["nav"]) => {
     removeAllChildren(results)
     if (finalResults.length === 0) {
       results.innerHTML = `<a class="result-card no-match">
-          <h3>No results.</h3>
-          <p>Try another search term?</p>
+          <h3>暂无数据</h3>
+          <p>试试其他搜索词?</p>
       </a>`
     } else {
       results.append(...finalResults.map(resultToHTML))
@@ -398,6 +395,10 @@ document.addEventListener("nav", async (e: CustomEventMap["nav"]) => {
       (a, b) => b.innerHTML.length - a.innerHTML.length,
     )
     highlights[0]?.scrollIntoView({ block: "start" })
+    const excalidraw = preview.querySelector("[data-excalidraw]")
+    if (excalidraw) {
+      initExcalidraw()
+    }
   }
 
   async function onType(e: HTMLElementEventMap["input"]) {
@@ -460,8 +461,8 @@ document.addEventListener("nav", async (e: CustomEventMap["nav"]) => {
 
   document.addEventListener("keydown", shortcutHandler)
   window.addCleanup(() => document.removeEventListener("keydown", shortcutHandler))
-  searchButton?.addEventListener("click", () => showSearch("basic"))
-  window.addCleanup(() => searchButton?.removeEventListener("click", () => showSearch("basic")))
+  searchIcon?.addEventListener("click", () => showSearch("basic"))
+  window.addCleanup(() => searchIcon?.removeEventListener("click", () => showSearch("basic")))
   searchBar?.addEventListener("input", onType)
   window.addCleanup(() => searchBar?.removeEventListener("input", onType))
 

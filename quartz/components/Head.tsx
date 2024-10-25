@@ -6,9 +6,7 @@ import { QuartzComponent, QuartzComponentConstructor, QuartzComponentProps } fro
 
 export default (() => {
   const Head: QuartzComponent = ({ cfg, fileData, externalResources }: QuartzComponentProps) => {
-    const titleSuffix = cfg.pageTitleSuffix ?? ""
-    const title =
-      (fileData.frontmatter?.title ?? i18n(cfg.locale).propertyDefaults.title) + titleSuffix
+    const title = fileData.frontmatter?.title ?? i18n(cfg.locale).propertyDefaults.title
     const description =
       fileData.description?.trim() ?? i18n(cfg.locale).propertyDefaults.description
     const { css, js } = externalResources
@@ -20,8 +18,20 @@ export default (() => {
     const iconPath = joinSegments(baseDir, "static/icon.png")
     const ogImagePath = `https://${cfg.baseUrl}/static/og-image.png`
 
+    // 是否转载, 转载关闭索引
+    const isPageReproduction = Boolean(fileData.frontmatter?.['origin-link'] ?? false);
+
     return (
       <head>
+        <link rel="alternate" type="application/rss+xml" title="最近的 15 条" href="/index.xml"></link>
+        <link rel="alternate" type="application/rss+xml" title="全部笔记" href="/rss-full.xml"></link>
+        <meta name="excalidraw-plugin" spa-preserve data-js content="/static/quartz-excalidraw-plugin.js" />
+        <meta name="contentIndex" data-json content="/static/contentIndex.json" />
+        {
+          isPageReproduction && <meta name="robots" content="noindex" />
+        }
+        <link rel="preconnect" spa-preserve href="https://cdnjs.cloudflare.com"></link>
+        <link rel="preconnect" spa-preserve href="https://cdn.iceprosurface.com/"></link>
         <title>{title}</title>
         <meta charSet="utf-8" />
         {cfg.theme.cdnCaching && cfg.theme.fontOrigin === "googleFonts" && (
@@ -31,14 +41,14 @@ export default (() => {
             <link rel="stylesheet" href={googleFontHref(cfg.theme)} />
           </>
         )}
-        <link rel="stylesheet" spa-preserve href="https://cdnjs.cloudflare.com/ajax/libs/lxgw-wenkai-webfont/1.7.0/style.css" />        
+        <link rel="stylesheet" spa-preserve href="https://cdnjs.cloudflare.com/ajax/libs/lxgw-wenkai-webfont/1.7.0/style.css" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         {cfg.baseUrl && <meta property="og:image" content={ogImagePath} />}
         <meta property="og:width" content="1200" />
         <meta property="og:height" content="675" />
-        <link rel="icon" href={iconPath} />
+        <link rel="shortcut icon" href={iconPath} />
         <meta name="description" content={description} />
         <meta name="generator" content="Quartz" />
         {css.map((href) => (

@@ -29,7 +29,7 @@ export function createProcessor(ctx: BuildCtx): QuartzProcessor {
           .flatMap((plugin) => plugin.markdownPlugins!(ctx)),
       )
       // MD AST -> HTML AST
-      .use(remarkRehype, { allowDangerousHtml: true })
+      .use(remarkRehype, { allowDangerousHtml: true, footnoteLabel: "脚注" })
       // HTML AST -> HTML AST transforms
       .use(transformers.filter((p) => p.htmlPlugins).flatMap((plugin) => plugin.htmlPlugins!(ctx)))
   )
@@ -143,7 +143,7 @@ export async function parseMarkdown(ctx: BuildCtx, fps: FilePath[]): Promise<Pro
 
     const childPromises: WorkerPromise<ProcessedContent[]>[] = []
     for (const chunk of chunks(fps, CHUNK_SIZE)) {
-      childPromises.push(pool.exec("parseFiles", [ctx.buildId, argv, chunk, ctx.allSlugs]))
+      childPromises.push(pool.exec("parseFiles", [argv, chunk, ctx.allSlugs]))
     }
 
     const results: ProcessedContent[][] = await WorkerPromise.all(childPromises).catch((err) => {

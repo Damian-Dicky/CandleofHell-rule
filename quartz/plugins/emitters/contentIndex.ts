@@ -18,6 +18,7 @@ export type ContentDetails = {
   richContent?: string
   date?: Date
   description?: string
+  frontmatter?: Record<string, unknown>
 }
 
 interface Options {
@@ -31,7 +32,7 @@ interface Options {
 const defaultOptions: Options = {
   enableSiteMap: true,
   enableRSS: true,
-  rssLimit: 10,
+  rssLimit: 15,
   rssFullHtml: false,
   includeEmptyFiles: true,
 }
@@ -51,15 +52,18 @@ function generateSiteMap(cfg: GlobalConfiguration, idx: ContentIndex): string {
 function generateRSSFeed(cfg: GlobalConfiguration, idx: ContentIndex, limit?: number): string {
   const base = cfg.baseUrl ?? ""
 
-  const createURLEntry = (slug: SimpleSlug, content: ContentDetails): string => `<item>
+  const createURLEntry = (slug: SimpleSlug, content: ContentDetails): string => {
+    const permalink = content.frontmatter?.['permalink']?.toString();
+    const guid = permalink ? `https://${joinSegments(base, encodeURI(permalink))}` : `https://${joinSegments(base, encodeURI(slug))}`
+    return `<item>
     <title>${escapeHTML(content.title)}</title>
     <link>https://${joinSegments(base, encodeURI(slug))}</link>
-    <guid>https://${joinSegments(base, encodeURI(slug))}</guid>
+    <guid>${guid}</guid>
     <description>${content.richContent ?? content.description}</description>
     <pubDate>${content.date?.toUTCString()}</pubDate>
   </item>`
-
-  const items = Array.from(idx)
+  }
+  const currentFull = Array.from(idx)
     .sort(([_, f1], [__, f2]) => {
       if (f1.date && f2.date) {
         return f2.date.getTime() - f1.date.getTime()
@@ -71,18 +75,28 @@ function generateRSSFeed(cfg: GlobalConfiguration, idx: ContentIndex, limit?: nu
 
       return f1.title.localeCompare(f2.title)
     })
+    .filter(([_slug, content]) => content.frontmatter?.['permalink'])
+    .filter(([_slug, content]) => !content.frontmatter?.['excalidraw-plugin'])
+    .filter(([_slug, content]) => !content.frontmatter?.['no-rss'])
+
+  const items = currentFull
     .map(([slug, content]) => createURLEntry(simplifySlug(slug), content))
-    .slice(0, limit ?? idx.size)
+    .slice(0, Math.min(limit ?? idx.size, currentFull.length))
     .join("")
+  const description = `${!!limit ? i18n(cfg.locale).pages.rss.lastFewNotes({ count: limit }) : i18n(cfg.locale).pages.rss.recentNotes} on ${escapeHTML(
+    cfg.pageTitle,
+  )}`
 
   return `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
     <channel>
       <title>${escapeHTML(cfg.pageTitle)}</title>
       <link>https://${base}</link>
-      <description>${!!limit ? i18n(cfg.locale).pages.rss.lastFewNotes({ count: limit }) : i18n(cfg.locale).pages.rss.recentNotes} on ${escapeHTML(
-        cfg.pageTitle,
-      )}</description>
+      <follow_challenge>
+        <feedId>52340201851637774</feedId>
+        <userId>68901958086173696</userId>
+      </follow_challenge>
+      <description>${limit === Infinity ? `在 ${cfg.pageTitle} 上的 ${currentFull.length} 条笔记` : description}</description>
       <generator>Quartz -- quartz.jzhao.xyz</generator>
       ${items}
     </channel>
@@ -122,6 +136,7 @@ export const ContentIndex: QuartzEmitterPlugin<Partial<Options>> = (opts) => {
         const date = getDate(ctx.cfg.configuration, file.data) ?? new Date()
         if (opts?.includeEmptyFiles || (file.data.text && file.data.text !== "")) {
           linkIndex.set(slug, {
+            frontmatter: file.data.frontmatter,
             title: file.data.frontmatter?.title!,
             links: file.data.links ?? [],
             tags: file.data.frontmatter?.tags ?? [],
@@ -147,14 +162,20 @@ export const ContentIndex: QuartzEmitterPlugin<Partial<Options>> = (opts) => {
       }
 
       if (opts?.enableRSS) {
-        emitted.push(
+        (await Promise.all([
           await write({
             ctx,
             content: generateRSSFeed(cfg, linkIndex, opts.rssLimit),
             slug: "index" as FullSlug,
             ext: ".xml",
           }),
-        )
+          await write({
+            ctx,
+            content: generateRSSFeed(cfg, linkIndex, Infinity),
+            slug: "rss-full" as FullSlug,
+            ext: ".xml",
+          }),
+        ])).map((p) => emitted.push(p))
       }
 
       const fp = joinSegments("static", "contentIndex") as FullSlug
@@ -165,6 +186,10 @@ export const ContentIndex: QuartzEmitterPlugin<Partial<Options>> = (opts) => {
           // for the RSS feed
           delete content.description
           delete content.date
+          delete content.richContent
+          if (content.frontmatter?.['excalidraw-plugin']) {
+            return [slug, { ...content, richContent: "" }]
+          }
           return [slug, content]
         }),
       )

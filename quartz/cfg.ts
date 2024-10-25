@@ -34,24 +34,15 @@ export type Analytics =
       provider: "tinylytics"
       siteId: string
     }
-  | {
-      provider: "cabin"
-      host?: string
-    }
-  | {
-      provider: "clarity"
-      projectId?: string
-    }
 
 export interface GlobalConfiguration {
   pageTitle: string
-  pageTitleSuffix?: string
   /** Whether to enable single-page-app style rendering. this prevents flashes of unstyled content and improves smoothness of Quartz */
   enableSPA: boolean
   /** Whether to display Wikipedia-style popovers when hovering over links */
   enablePopovers: boolean
   /** Analytics mode */
-  analytics: Analytics
+  analytics: Analytics[]
   /** Glob patterns to not search */
   ignorePatterns: string[]
   /** Whether to use created, modified, or published as the default type of date */

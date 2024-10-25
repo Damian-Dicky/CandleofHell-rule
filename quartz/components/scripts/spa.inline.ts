@@ -13,7 +13,7 @@ const isLocalUrl = (href: string) => {
     if (window.location.origin === url.origin) {
       return true
     }
-  } catch (e) {}
+  } catch (e) { }
   return false
 }
 
@@ -125,6 +125,10 @@ function createRouter() {
         return
       }
 
+      if (isSamePage(url) && url.href.endsWith('#')) {
+        // 说明是没有正确设置 hash 的 a 标签，跳过即可
+        return;
+      }
       try {
         navigate(url, false)
       } catch (e) {

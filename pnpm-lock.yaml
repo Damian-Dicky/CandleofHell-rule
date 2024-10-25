@@ -17,6 +17,9 @@ importers:
       '@napi-rs/simple-git':
         specifier: 0.1.19
         version: 0.1.19
+      '@shikijs/transformers':
+        specifier: ^1.22.1
+        version: 1.22.1
       '@tweenjs/tween.js':
         specifier: ^25.0.0
         version: 25.0.0
@@ -780,6 +783,9 @@ packages:
 
   '@shikijs/engine-oniguruma@1.22.1':
     resolution: {integrity: sha512-L+1Vmd+a2kk8HtogUFymQS6BjUfJnzcWoUp1BUgxoDiklbKSMvrsMuLZGevTOP1m0rEjgnC5MsDmsr8lX1lC+Q==, tarball: https://registry.npmmirror.com/@shikijs/engine-oniguruma/-/engine-oniguruma-1.22.1.tgz}
+
+  '@shikijs/transformers@1.22.1':
+    resolution: {integrity: sha512-KvG49YFV6gV116sC4L3Sn1Rp6HXsioMKBBG373j088rw849440hm8s2r+/dgjsGLvT4p+QB7newev+5a3ARM6w==, tarball: https://registry.npmmirror.com/@shikijs/transformers/-/transformers-1.22.1.tgz}
 
   '@shikijs/types@1.22.1':
     resolution: {integrity: sha512-+45f8mu/Hxqs6Kyhfm98Nld5n7Q7lwhjU8UtdQwrOPs7BnM4VAb929O3IQ2ce+4D7SlNFlZGd8CnKRSnwbQreQ==, tarball: https://registry.npmmirror.com/@shikijs/types/-/types-1.22.1.tgz}
@@ -2893,6 +2899,10 @@ snapshots:
     dependencies:
       '@shikijs/types': 1.22.1
       '@shikijs/vscode-textmate': 9.3.0
+
+  '@shikijs/transformers@1.22.1':
+    dependencies:
+      shiki: 1.22.1
 
   '@shikijs/types@1.22.1':
     dependencies:
