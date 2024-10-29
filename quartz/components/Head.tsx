@@ -15,23 +15,36 @@ export default (() => {
     const path = url.pathname as FullSlug
     const baseDir = fileData.slug === "404" ? path : pathToRoot(fileData.slug!)
 
-    const iconPath = joinSegments(baseDir, "static/icon.png")
+    const iconPath = joinSegments(baseDir, "static/icon1.png")
     const ogImagePath = `https://${cfg.baseUrl}/static/og-image.png`
 
     // 是否转载, 转载关闭索引
-    const isPageReproduction = Boolean(fileData.frontmatter?.['origin-link'] ?? false);
+    const isPageReproduction = Boolean(fileData.frontmatter?.["origin-link"] ?? false)
 
     return (
       <head>
-        <link rel="alternate" type="application/rss+xml" title="最近的 15 条" href="/index.xml"></link>
-        <link rel="alternate" type="application/rss+xml" title="全部笔记" href="/rss-full.xml"></link>
-        <meta name="excalidraw-plugin" spa-preserve data-js content="/static/quartz-excalidraw-plugin.js" />
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="最近的 15 条"
+          href="/index.xml"
+        ></link>
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="全部笔记"
+          href="/rss-full.xml"
+        ></link>
+        <meta
+          name="excalidraw-plugin"
+          spa-preserve
+          data-js
+          content="/static/quartz-excalidraw-plugin.js"
+        />
         <meta name="contentIndex" data-json content="/static/contentIndex.json" />
-        {
-          isPageReproduction && <meta name="robots" content="noindex" />
-        }
+        {isPageReproduction && <meta name="robots" content="noindex" />}
         <link rel="preconnect" spa-preserve href="https://cdnjs.cloudflare.com"></link>
-        <link rel="preconnect" spa-preserve href="https://cdn.iceprosurface.com/"></link>
+        <link rel="preconnect" spa-preserve href="https://damiandicky.me/"></link>
         <title>{title}</title>
         <meta charSet="utf-8" />
         {cfg.theme.cdnCaching && cfg.theme.fontOrigin === "googleFonts" && (
@@ -41,7 +54,11 @@ export default (() => {
             <link rel="stylesheet" href={googleFontHref(cfg.theme)} />
           </>
         )}
-        <link rel="stylesheet" spa-preserve href="https://cdnjs.cloudflare.com/ajax/libs/lxgw-wenkai-webfont/1.7.0/style.css" />
+        <link
+          rel="stylesheet"
+          spa-preserve
+          href="https://cdnjs.cloudflare.com/ajax/libs/lxgw-wenkai-webfont/1.7.0/style.css"
+        />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />

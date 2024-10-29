@@ -87,6 +87,7 @@
     "remark-smartypants": "^3.0.2",
     "rfdc": "^1.4.1",
     "rimraf": "^6.0.1",
+    "sanitize-html": "^2.13.1",
     "serve-handler": "^6.1.5",
     "shiki": "^1.22.0",
     "source-map-support": "^0.5.21",
