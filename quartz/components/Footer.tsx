@@ -18,8 +18,8 @@ export default ((opts?: Options) => {
         <div class="extra-footer-link">
           <ul>
             <li>
-              <a target="_blank" href="https://damiandicky.me">
-                我的主页
+              <a target="_blank" href="mailto:damiandicky@163.com">
+                欢迎邮件反馈
               </a>
             </li>
             <li>

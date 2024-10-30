@@ -8,8 +8,8 @@ export const sharedPageComponents: SharedLayout = {
   afterBody: [],
   footer: Component.Footer({
     links: {
-      "我的主页": "https://damiandicky.me",
-      "加入群聊": "https://qm.qq.com/q/H7kP9vu5W2"
+      欢迎反馈: "damiandicky@163.com",
+      加入群聊: "https://qm.qq.com/q/H7kP9vu5W2",
     },
   }),
 }
@@ -27,13 +27,10 @@ export const defaultContentPageLayout: PageLayout = {
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
-    Component.DesktopOnly(Component.Explorer(),),
+    Component.DesktopOnly(Component.Explorer()),
     Component.DesktopOnly(Component.TableOfContents()),
   ],
-  right: [
-    Component.Graph(),
-    Component.Backlinks(),
-  ],
+  right: [Component.Graph(), Component.Backlinks()],
 }
 
 // components for pages that display lists of pages  (e.g. tags or folders)
