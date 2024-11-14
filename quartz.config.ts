@@ -11,17 +11,9 @@ const config: QuartzConfig = {
     pageTitle: "🐉 彼岸之烛",
     enableSPA: true,
     enablePopovers: true,
-    analytics: [
-      {
-        provider: "google",
-        tagId: "G-6X691M6ZVW"
-      },
-      {
-        provider: "umami",
-        websiteId: "cdf3e238-4ec3-4428-8449-91b9ffbe8c03",
-        host: "https://umami.iceprosurface.com"
-      }
-    ],
+    analytics: {
+      provider: "plausible",
+    },
     locale: "zh-CN",
     baseUrl: "quartz.jzhao.xyz",
     ignorePatterns: ["private", "templates", ".obsidian"],
@@ -75,9 +67,13 @@ const config: QuartzConfig = {
       Plugin.ObsidianFlavoredMarkdown({ enableInHtmlEmbed: false, enableImageWidth: true }),
       Plugin.GitHubFlavoredMarkdown(),
       Plugin.TableOfContents({
-        maxDepth: 6
+        maxDepth: 6,
       }),
-      Plugin.CrawlLinks({ markdownLinkResolution: "relative", prettyLinks: false, openLinksInNewTab: true }),
+      Plugin.CrawlLinks({
+        markdownLinkResolution: "relative",
+        prettyLinks: false,
+        openLinksInNewTab: true,
+      }),
       Plugin.Description(),
     ],
     filters: [Plugin.RemoveDrafts()],
@@ -90,7 +86,7 @@ const config: QuartzConfig = {
       Plugin.ContentIndex({
         enableSiteMap: true,
         enableRSS: true,
-        rssFullHtml: true
+        rssFullHtml: true,
       }),
       Plugin.Assets(),
       Plugin.Static(),
