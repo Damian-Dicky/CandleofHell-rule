@@ -81,86 +81,134 @@ function addGlobalPageResources(
         componentResources.afterDOMLoaded.push(popoverScript);
         componentResources.css.push(popoverStyle);
     }
-    cfg.analytics.forEach((_cfg) => {
-        if (_cfg?.provider === "google") {
-            const tagId = _cfg.tagId;
-            componentResources.afterDOMLoaded.push(`
-        const gtagScript = document.createElement("script")
-        gtagScript.src = "https://www.googletagmanager.com/gtag/js?id=${tagId}"
-        gtagScript.async = true
-        document.head.appendChild(gtagScript)
-  
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag("js", new Date());
-        gtag("config", "${tagId}", { send_page_view: false });
-  
-        document.addEventListener("nav", () => {
-          gtag("event", "page_view", {
-            page_title: document.title,
-            page_location: location.href,
+
+    if (cfg.analytics?.provider === "google") {
+        const tagId = cfg.analytics.tagId;
+        componentResources.afterDOMLoaded.push(`
+        const gtagScript = document.createElement('script');
+        gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=${tagId}';
+        gtagScript.defer = true;
+        gtagScript.onload = () => {
+          window.dataLayer = window.dataLayer || [];
+          function gtag() {
+            dataLayer.push(arguments);
+          }
+          gtag('js', new Date());
+          gtag('config', '${tagId}', { send_page_view: false });
+          gtag('event', 'page_view', { page_title: document.title, page_location: location.href });
+          document.addEventListener('nav', () => {
+            gtag('event', 'page_view', { page_title: document.title, page_location: location.href });
           });
-        });`);
-        } else if (_cfg?.provider === "plausible") {
-            const plausibleHost = _cfg.host ?? "https://plausible.io";
-            componentResources.afterDOMLoaded.push(`
-        const plausibleScript = document.createElement("script")
-        plausibleScript.src = "${plausibleHost}/js/script.manual.js"
-        plausibleScript.setAttribute("data-domain", location.hostname)
-        plausibleScript.defer = true
-        document.head.appendChild(plausibleScript)
-  
-        window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }
-  
-        document.addEventListener("nav", () => {
-          plausible("pageview")
-        })
+        };
+        
+        document.head.appendChild(gtagScript);
       `);
-        } else if (_cfg?.provider === "umami") {
-            componentResources.afterDOMLoaded.push(`
-        const umamiScript = document.createElement("script")
-        umamiScript.src = "${_cfg.host ?? "https://analytics.umami.is"}/script.js"
-        umamiScript.setAttribute("data-website-id", "${_cfg.websiteId}")
-        umamiScript.async = true
+    } else if (cfg.analytics?.provider === "plausible") {
+        const plausibleHost = cfg.analytics.host ?? "https://plausible.io";
+        componentResources.afterDOMLoaded.push(`
+        const plausibleScript = document.createElement('script');
+        plausibleScript.src = '${plausibleHost}/js/script.manual.js';
+        plausibleScript.setAttribute('data-domain', location.hostname);
+        plausibleScript.defer = true;
+        plausibleScript.onload = () => {
+          window.plausible = window.plausible || function () { (window.plausible.q = window.plausible.q || []).push(arguments); };
+          plausible('pageview');
+          document.addEventListener('nav', () => {
+            plausible('pageview');
+          });
+        };
   
-        document.head.appendChild(umamiScript)
+        document.head.appendChild(plausibleScript);
       `);
-        } else if (_cfg?.provider === "goatcounter") {
-            componentResources.afterDOMLoaded.push(`
-        const goatcounterScript = document.createElement("script")
-        goatcounterScript.src = "${_cfg.scriptSrc ?? "https://gc.zgo.at/count.js"}"
-        goatcounterScript.async = true
-        goatcounterScript.setAttribute("data-goatcounter",
-          "https://${_cfg.websiteId}.${_cfg.host ?? "goatcounter.com"}/count")
-        document.head.appendChild(goatcounterScript)
+    } else if (cfg.analytics?.provider === "umami") {
+        componentResources.afterDOMLoaded.push(`
+        const umamiScript = document.createElement("script");
+        umamiScript.src = "${cfg.analytics.host ?? "https://analytics.umami.is"}/script.js";
+        umamiScript.setAttribute("data-website-id", "${cfg.analytics.websiteId}");
+        umamiScript.setAttribute("data-auto-track", "true");
+        umamiScript.defer = true;
+  
+        document.head.appendChild(umamiScript);
       `);
-        } else if (_cfg?.provider === "posthog") {
-            componentResources.afterDOMLoaded.push(`
-        const posthogScript = document.createElement("script")
+    } else if (cfg.analytics?.provider === "goatcounter") {
+        componentResources.afterDOMLoaded.push(`
+        const goatcounterScriptPre = document.createElement('script');
+        goatcounterScriptPre.textContent = \`
+          window.goatcounter = { no_onload: true };
+        \`;
+        document.head.appendChild(goatcounterScriptPre);
+  
+        const endpoint = "https://${cfg.analytics.websiteId}.${cfg.analytics.host ?? "goatcounter.com"}/count";
+        const goatcounterScript = document.createElement('script');
+        goatcounterScript.src = "${cfg.analytics.scriptSrc ?? "https://gc.zgo.at/count.js"}";
+        goatcounterScript.defer = true;
+        goatcounterScript.setAttribute('data-goatcounter', endpoint);
+        goatcounterScript.onload = () => {
+          window.goatcounter.endpoint = endpoint;
+          goatcounter.count({ path: location.pathname });
+          document.addEventListener('nav', () => {
+            goatcounter.count({ path: location.pathname });
+          });
+        };
+  
+        document.head.appendChild(goatcounterScript);
+      `);
+    } else if (cfg.analytics?.provider === "posthog") {
+        componentResources.afterDOMLoaded.push(`
+        const posthogScript = document.createElement("script");
         posthogScript.innerHTML= \`!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-        posthog.init('${_cfg.apiKey}',{api_host:'${_cfg.host ?? "https://app.posthog.com"}'})\`
-        document.head.appendChild(posthogScript)
+        posthog.init('${cfg.analytics.apiKey}', {
+          api_host: '${cfg.analytics.host ?? "https://app.posthog.com"}',
+          capture_pageview: false,
+        });
+        document.addEventListener('nav', () => {
+          posthog.capture('$pageview', { path: location.pathname });
+        })\`
+  
+        document.head.appendChild(posthogScript);
       `);
-        } else if (_cfg?.provider === "tinylytics") {
-            const siteId = _cfg.siteId;
-            componentResources.afterDOMLoaded.push(`
-        const tinylyticsScript = document.createElement("script")
-        tinylyticsScript.src = "https://tinylytics.app/embed/${siteId}.js"
-        tinylyticsScript.defer = true
-        document.head.appendChild(tinylyticsScript)
+    } else if (cfg.analytics?.provider === "tinylytics") {
+        const siteId = cfg.analytics.siteId;
+        componentResources.afterDOMLoaded.push(`
+        const tinylyticsScript = document.createElement('script');
+        tinylyticsScript.src = 'https://tinylytics.app/embed/${siteId}.js?spa';
+        tinylyticsScript.defer = true;
+        tinylyticsScript.onload = () => {
+          window.tinylytics.triggerUpdate();
+          document.addEventListener('nav', () => {
+            window.tinylytics.triggerUpdate();
+          });
+        };
+        
+        document.head.appendChild(tinylyticsScript);
       `);
-        }
-    });
+    } else if (cfg.analytics?.provider === "cabin") {
+        componentResources.afterDOMLoaded.push(`
+        const cabinScript = document.createElement("script")
+        cabinScript.src = "${cfg.analytics.host ?? "https://scripts.withcabin.com"}/hello.js"
+        cabinScript.defer = true
+        document.head.appendChild(cabinScript)
+      `);
+    } else if (cfg.analytics?.provider === "clarity") {
+        componentResources.afterDOMLoaded.push(`
+        const clarityScript = document.createElement("script")
+        clarityScript.innerHTML= \`(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.defer=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "${cfg.analytics.projectId}");\`
+        document.head.appendChild(clarityScript)
+      `);
+    }
 
     if (cfg.enableSPA) {
         componentResources.afterDOMLoaded.push(spaRouterScript);
     } else {
         componentResources.afterDOMLoaded.push(`
-      window.spaNavigate = (url, _) => window.location.assign(url)
-      window.addCleanup = () => {}
-      const event = new CustomEvent("nav", { detail: { url: document.body.dataset.slug } })
-      document.dispatchEvent(event)
-    `);
+        window.spaNavigate = (url, _) => window.location.assign(url)
+        window.addCleanup = () => {}
+        const event = new CustomEvent("nav", { detail: { url: document.body.dataset.slug } })
+        document.dispatchEvent(event)
+      `);
     }
 }
 
